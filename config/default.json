@@ -1,0 +1,38 @@
+{
+    "app": {
+        "environment": "production"
+    },
+    "cloud": {
+        "project_name": "neith-app-project",
+        "credentials_path": "credentials.json",
+        "firebase": {
+            "apiKey": "teste",
+            "authDomain": "neith-app-project.firebaseapp.com",
+            "projectId": "neith-app-project",
+            "storageBucket": "neith-app-project.appspot.com",
+            "messagingSenderId": "18562248879",
+            "appId": "1:18562248879:web:14678f224ebe100fbc645a",
+            "measurementId": "teste"
+        }
+    },
+    "database": {
+        "db_name": "neith-app-project-production"
+    },
+    "places_scraper": {
+        "maps_api_key": "test-key",
+        "maps_queries": [
+            "restaurants in Rome",
+            "historical landmarks in Rome",
+            "nightclubs in Rome",
+            "parks in Rome",
+            "museums in Rome",
+            "religious centers in Rome",
+            "bars in Rome",
+            "vegan restaurants in Rome",
+            "vegetarian restaurants in Rome",
+            "historical heritage in Rome",
+            "malls in Rome",
+            "craft fairs in Rome"
+        ]
+    }
+}

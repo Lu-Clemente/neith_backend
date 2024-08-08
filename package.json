@@ -1,0 +1,33 @@
+{
+  "name": "neith_backend",
+  "version": "0.0.0",
+  "description": "Neith App - Tourism assistant using Google's Gemini",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "author": "Vitor Ribeiro",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "config": "^3.3.12",
+    "firebase": "^10.12.5",
+    "firebase-admin": "^12.2.0",
+    "firebase-functions": "^5.0.1",
+    "joi": "^17.13.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.1.0"
+  },
+  "private": true
+}
