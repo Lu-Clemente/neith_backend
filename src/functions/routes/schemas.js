@@ -48,7 +48,7 @@ const schemas = {
         query: Joi.object().keys({
             offset: Joi.number().integer().min(0).default(0).optional(),
             limit: Joi.number().integer().min(0).default(20).optional(),
-            text: Joi.string().alphanum().default("").optional(),
+            text: Joi.string().empty("").default(""),
         }).default({start: 0, length: 20, text: ""}),
     }).required(),
     postTravelPlan: Joi.object().keys({
