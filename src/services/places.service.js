@@ -77,8 +77,9 @@ class PlacesService {
     async searchPaginated(offset = 0, limit = 20, text = "") {
         const response = await getFirestore(this.databaseName)
             .collection(this.collectionName)
-            .where("displayName.text", ">=", text)
-            .where("displayName.text", "<=", text + "\uf8ff")
+            .where("search.text", ">=", text)
+            .where("search.text", "<=", text + "\uf8ff")
+            .where("search.keywords", "array-contains", text)
             .offset(offset)
             .limit(limit)
             .get();

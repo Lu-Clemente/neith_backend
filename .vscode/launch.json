@@ -7,6 +7,16 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch search-optimizer",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/functions/search-optimizer.js",
+            "envFile": "${workspaceFolder}/src/functions/.env"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch photos-scraper",
             "skipFiles": [
                 "<node_internals>/**"
