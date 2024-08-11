@@ -21,7 +21,7 @@ const { StorageService } = require("../../services/storage.service");
  * @param {Auth} authMiddleware 
  */
 function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, authMiddleware) {
-    app.get("/v1/travel-plans/:userId", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async function (req, res) {
+    app.get("/v1/travel-plans/:userId", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async function (req, res, next) {
         const { userId } = req.state.input.params;
 
         let travelPlans = null;
@@ -34,7 +34,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(travelPlans);
     });
 
-    app.get("/v1/places", validateInput(schemas.getPlaces), authMiddleware.authenticate(), async function (req, res) {
+    app.get("/v1/places", validateInput(schemas.getPlaces), authMiddleware.authenticate(), async function (req, res, next) {
         const { offset, limit, text } = req.state.input.query;
 
         let places = [];
@@ -42,7 +42,10 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             places = await placesService.searchPaginated(offset, limit, text);
 
             const photos = await Promise.all(places.map((place) => storageService.getDownloadURL(place.photoPath)));
-            places = places.map((place, index) => place.photoUrl = photos[index]);
+            places = places.map((place, index) => {
+                place.photoUrl = photos[index];
+                return place;
+            });
         } catch (error) {
             return next(new InternalException("An error occurred finding places", error));
         }
@@ -50,7 +53,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(places);
     });
 
-    app.post("/v1/travel-plans/:userId", validateInput(schemas.postTravelPlan), authMiddleware.authenticate(), async function (req, res) {
+    app.post("/v1/travel-plans/:userId", validateInput(schemas.postTravelPlan), authMiddleware.authenticate(), async function (req, res, next) {
         const { userId } = req.state.input.params;
         const data = req.state.input.body;
 
@@ -65,7 +68,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(travelPlans);
     });
 
-    app.post("/v1/travel-plans/:planId/generate", validateInput(schemas.postGenerateTravelPlan), authMiddleware.authenticate(), async function (req, res) {
+    app.post("/v1/travel-plans/:planId/generate", validateInput(schemas.postGenerateTravelPlan), authMiddleware.authenticate(), async function (req, res, next) {
         const { externalId } = req.state.user;
         const { planId } = req.state.input.params;
 
@@ -95,7 +98,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const tripDays = travelPlan.travelDuration;
             const attractions = travelPlan.tourismTypes.join(", ");
             const preferredTime = travelPlan.preferredTime;
-            
+
             const disabilities = user.disabilities.join(", ");
             const dietRestrictions = user.restaurantDietTags.join(", ");
             const restaurants = places.reduce((restaurant, value, index) => {
@@ -104,7 +107,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                 if (index < places.length - 1) result += ", ";
                 return value + result;
             }, "");
-            
+
             const arrivalTime = travelPlan.arrivalHour;
             const departureTime = travelPlan.departureHour;
 
@@ -118,7 +121,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(travelPlan);
     });
 
-    app.post("/v1/travel-plans/:planId/start", validateInput(schemas.postStartTravelPlan), authMiddleware.authenticate(), async function (req, res) {
+    app.post("/v1/travel-plans/:planId/start", validateInput(schemas.postStartTravelPlan), authMiddleware.authenticate(), async function (req, res, next) {
         const { planId } = req.state.input.params;
         const data = req.state.input.body;
 
@@ -143,7 +146,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(travelPlan);
     });
 
-    app.post("/v1/travel-plans/:planId/finish", validateInput(schemas.postFinishTravelPlan), authMiddleware.authenticate(), async function (req, res) {
+    app.post("/v1/travel-plans/:planId/finish", validateInput(schemas.postFinishTravelPlan), authMiddleware.authenticate(), async function (req, res, next) {
         const { planId } = req.state.input.params;
         const data = req.state.input.body;
 

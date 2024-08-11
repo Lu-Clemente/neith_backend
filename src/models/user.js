@@ -1,4 +1,5 @@
 class User {
+    name = "";
     externalId = "";
     birthday = new Date();
     restaurantDietTags = [];
