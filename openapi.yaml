@@ -1,0 +1,151 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Your API"
+paths:
+  /v1/users/:
+    post:
+      summary: "Create a user"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/postRegister"
+      responses:
+        '200':
+          description: "User created successfully"
+  /v1/users/{userId}:
+    put:
+      summary: "Update a user"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/putUser"
+      responses:
+        '200':
+          description: "User updated successfully"
+  /v1/travel-plans/{userId}:
+    get:
+      summary: "Get travel plans for a user"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "Travel plans retrieved successfully"
+    post:
+      summary: "Create a travel plan for a user"
+      parameters:
+        - name: "userId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/postTravelPlan"
+      responses:
+        '200':
+          description: "Travel plan created successfully"
+  /v1/places:
+    get:
+      summary: "Get places"
+      responses:
+        '200':
+          description: "Places retrieved successfully"
+  /v1/travel-plans/{planId}/generate:
+    post:
+      summary: "Generate a travel plan"
+      parameters:
+        - name: "planId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "Travel plan generated successfully"
+  /v1/travel-plans/{planId}/start:
+    post:
+      summary: "Start a travel plan"
+      parameters:
+        - name: "planId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "Travel plan started successfully"
+  /v1/travel-plans/{planId}/finish:
+    post:
+      summary: "Finish a travel plan"
+      parameters:
+        - name: "planId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "Travel plan finished successfully"
+components:
+  schemas:
+    postRegister:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        birthday:
+          type: "string"
+          format: "date"
+        externalId:
+          type: "string"
+    putUser:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        birthday:
+          type: "string"
+          format: "date"
+        disabilities:
+          type: "array"
+          items:
+            type: "string"
+        restaurantDietTags:
+          type: "array"
+          items:
+            type: "string"
+    postTravelPlan:
+      type: "object"
+      properties:
+        preferredTime:
+          type: "string"
+        tourismTypes:
+          type: "array"
+          items:
+            type: "string"
+        travelerCount:
+          type: "integer"
+        travelDuration:
+          type: "integer"
+        arrivalHour:
+          type: "integer"
+        departureHour:
+          type: "integer"

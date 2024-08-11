@@ -42,6 +42,14 @@ resource "google_storage_bucket_object" "privacy_policy_object" {
   source = "${path.module}/files/privacy-policy.html"
 }
 
+resource "google_storage_bucket_object" "openapi_docs_object" {
+  provider = google-beta
+  bucket   = google_storage_bucket.serving_bucket.id
+
+  name   = "api/openapi.yaml"
+  source = "${path.module}/../openapi.yaml"
+}
+
 resource "google_firebase_storage_bucket" "firebase_serving_bucket" {
   provider = google-beta
   project  = local.project_name
