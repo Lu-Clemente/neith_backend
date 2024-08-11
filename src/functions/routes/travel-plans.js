@@ -9,6 +9,7 @@ const { UsersService } = require("../../services/users.service");
 const { TravelPlan } = require("../../models/travelPlan");
 const { User } = require("../../models/user");
 const { PlacesService } = require("../../services/places.service");
+const { StorageService } = require("../../services/storage.service");
 
 /**
  * @param {Express.Application} app 
@@ -16,9 +17,10 @@ const { PlacesService } = require("../../services/places.service");
  * @param {AIService} aiService 
  * @param {UsersService} userService 
  * @param {PlacesService} placesService 
+ * @param {StorageService} storageService 
  * @param {Auth} authMiddleware 
  */
-function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, authMiddleware) {
+function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, authMiddleware) {
     app.get("/v1/travel-plans/:userId", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async function (req, res) {
         const { userId } = req.state.input.params;
 
@@ -38,6 +40,9 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         let places = [];
         try {
             places = await placesService.searchPaginated(offset, limit, text);
+
+            const photos = await Promise.all(places.map((place) => storageService.getDownloadURL(place.photoPath)));
+            places = places.map((place, index) => place.photoUrl = photos[index]);
         } catch (error) {
             return next(new InternalException("An error occurred finding places", error));
         }
@@ -90,6 +95,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const tripDays = travelPlan.travelDuration;
             const attractions = travelPlan.tourismTypes.join(", ");
             const preferredTime = travelPlan.preferredTime;
+            
             const disabilities = user.disabilities.join(", ");
             const dietRestrictions = user.restaurantDietTags.join(", ");
             const restaurants = places.reduce((restaurant, value, index) => {
@@ -98,8 +104,12 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                 if (index < places.length - 1) result += ", ";
                 return value + result;
             }, "");
+            
+            const arrivalTime = travelPlan.arrivalHour;
+            const departureTime = travelPlan.departureHour;
 
-            travelPlan.plan = await aiService.generateResponse(`I'm ${age} years old and planning a ${tripDays}-day trip to Rome. I want to visit the following attractions: ${attractions}. I prefer doing things by ${preferredTime} sticking to a strict schedule to avoid crowds. I'd also like to know which areas to avoid due to theft and pickpocketing. Could you please create a travel plan with suggested times and tourist attractions for my trip, also suggest me the places I could have lunch and dinner in the meantime? Respond with a json string`);
+            const result = await aiService.generateResponse(`I'm ${age} years old and planning a ${tripDays}-day trip to Rome. I want to visit the following attractions: ${attractions}. I prefer doing things by ${preferredTime} sticking to a strict schedule to avoid crowds. I'd also like to know which areas to avoid due to theft and pickpocketing. Could you please create a travel plan with suggested times and tourist attractions for my trip, also suggest me the places I could have lunch and dinner in the meantime? Respond with a json string`);
+            travelPlan.plan = JSON.parse(result);
             travelPlan = await travelPlansService.update(planId, travelPlan);
         } catch (error) {
             return next(new InternalException(`An error occurred creating travel plan for user ${userId}`, error));

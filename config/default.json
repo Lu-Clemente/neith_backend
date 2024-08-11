@@ -13,7 +13,8 @@
             "messagingSenderId": "18562248879",
             "appId": "1:18562248879:web:14678f224ebe100fbc645a",
             "measurementId": "teste"
-        }
+        },
+        "storage_bucket": "neith-app-project-places-photos-bucket-production"
     },
     "database": {
         "db_name": "neith-app-project-production"

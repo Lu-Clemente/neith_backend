@@ -7,12 +7,22 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch photos-scraper",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/functions/photo-scraper.js",
+            "envFile": "${workspaceFolder}/src/functions/.env"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch places-scraper",
             "skipFiles": [
                 "<node_internals>/**"
             ],
             "program": "${workspaceFolder}/src/functions/places-scraper.js",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/src/functions/.env"
         }
     ]
 }

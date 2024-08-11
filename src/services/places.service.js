@@ -83,8 +83,23 @@ class PlacesService {
             .limit(limit)
             .get();
 
-        const result = response.docs.map((doc) => doc.data());
-        console.log(result);
+        const result = response.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
+        return result;
+    }
+
+    updatePlace(id, data) {
+        return getFirestore(this.databaseName)
+            .collection(this.collectionName)
+            .doc(id)
+            .set(data);
+    }
+
+    async getPlaces() {
+        const response = await getFirestore(this.databaseName)
+            .collection(this.collectionName)
+            .get();
+
+        const result = response.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
         return result;
     }
 }

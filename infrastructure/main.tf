@@ -63,6 +63,20 @@ resource "google_firebase_storage_bucket" "firebase_users_bucket" {
   bucket_id = google_storage_bucket.users_bucket.id
 }
 
+resource "google_storage_bucket" "places_photos_bucket" {
+  provider                    = google-beta
+  name                        = "${local.project_name}-places-photos-bucket-${var.environment}"
+  location                    = "US"
+  uniform_bucket_level_access = true
+}
+
+resource "google_firebase_storage_bucket" "firebase_places_photos_bucket" {
+  provider = google-beta
+  project  = local.project_name
+
+  bucket_id = google_storage_bucket.places_photos_bucket.id
+}
+
 resource "google_project_service" "places_api_service" {
   provider = google-beta
   project  = local.project_name
