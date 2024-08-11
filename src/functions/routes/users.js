@@ -3,9 +3,10 @@ const schemas = require("./schemas");
 const { validateInput } = require("../../middlewares/input-validation");
 
 const { InternalException, NotFoundException } = require("../../models/errors");
+const { putChangeValue, arrayEquals } = require("../../utils/update-functions");
 
 function configureUserRoutes(app, userService, authMiddleware) {
-    app.post("/v1/users/", validateInput(schemas.postRegister), async function (req, res, next) {
+    app.post("/v1/users/", validateInput(schemas.postRegister), async (req, res, next) => {
         const userInput = req.state.input.body;
 
         let user = null;
@@ -18,7 +19,7 @@ function configureUserRoutes(app, userService, authMiddleware) {
         return res.json(user);
     });
 
-    app.put("/v1/users/:userId", validateInput(schemas.putUser), authMiddleware.authenticate(), async function (req, res, next) {
+    app.put("/v1/users/:userId", validateInput(schemas.putUser), authMiddleware.authenticate(), async (req, res, next) => {
         const { userId } = req.state.params;
         const userInput = req.state.input.body;
 
