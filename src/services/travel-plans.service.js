@@ -1,4 +1,7 @@
 const { getFirestore } = require("firebase-admin/firestore");
+const { v4: uuidV4 } = require("uuid");
+
+// eslint-disable-next-line no-unused-vars
 const { TravelPlan } = require("../models/travelPlan");
 
 class TravelPlansService {
@@ -7,8 +10,10 @@ class TravelPlansService {
         this.collectionName = "travelPlans";
     }
 
-    create(item) {
-        return getFirestore(this.databaseName).collection(this.collectionName).doc().set(item);
+    async create(data) {
+        const id = uuidV4();
+        await getFirestore(this.databaseName).collection(this.collectionName).doc(id).set(data);
+        return { ...data, id };
     }
 
     /**
@@ -21,7 +26,7 @@ class TravelPlansService {
             .collection(this.collectionName)
             .where("userId", "==", userId.toString())
             .get();
-        return result.data();
+        return result.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     }
 
     update(id, data) {

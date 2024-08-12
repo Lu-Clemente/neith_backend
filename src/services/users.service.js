@@ -1,6 +1,8 @@
 const { getFirestore } = require("firebase-admin/firestore");
-const { User } = require("../models/user");
 const { v4: uuidV4 } = require("uuid");
+
+// eslint-disable-next-line no-unused-vars
+const { User } = require("../models/user");
 
 class UsersService {
     constructor(databaseName) {
@@ -43,7 +45,8 @@ class UsersService {
      */
     async findByExternalId(externalId) {
         const result = await getFirestore(this.databaseName).collection(this.collectionName).where("externalId", "==", externalId).get();
-        return result.data();
+        if(!result.docs) return null;
+        return {...result.docs[0].data(), id: result.docs[0].id};
     }
 
     /**

@@ -31,18 +31,18 @@ function configureUserRoutes(app, userService, authMiddleware) {
     });
 
     app.put("/v1/users/:userId", validateInput(schemas.putUser), authMiddleware.authenticate(), async (req, res, next) => {
-        const { userId } = req.state.input.params;
+        const { externalId } = req.state.user;
         const userInput = req.state.input.body;
 
         let user = null;
         try {
-            user = await userService.findById(userId);
+            user = await userService.findByExternalId(externalId);
         } catch (error) {
-            return next(new InternalException(`An error occurred finding user ${userId}`, error));
+            return next(new InternalException(`An error occurred finding user ${externalId}`, error));
         }
 
         if (!user) {
-            return next(new NotFoundException(`User with id ${userId}, was not found`));
+            return next(new NotFoundException(`User with id ${externalId}, was not found`));
         }
 
         const updatedUser = {
@@ -53,7 +53,7 @@ function configureUserRoutes(app, userService, authMiddleware) {
             externalId: user.externalId
         };
         try {
-            user = await userService.update(userId, updatedUser);
+            user = await userService.update(user.id, updatedUser);
         } catch (error) {
             next(new InternalException("An error occurred creating user", error));
         }

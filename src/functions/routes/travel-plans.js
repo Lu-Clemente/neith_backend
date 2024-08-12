@@ -2,23 +2,22 @@ const schemas = require("./schemas");
 
 const { validateInput } = require("../../middlewares/input-validation");
 const { NotFoundException, InternalException } = require("../../models/errors");
-const { TravelPlan } = require("../../models/travelPlan");
-const { User } = require("../../models/user");
 
 /* eslint-disable no-unused-vars */
 const { TravelPlansService } = require("../../services/travel-plans.service");
-const { AIService } = require("../../services/ai.service");
+const { TravelPlanAIservice } = require("../../services/ai.service");
 const { UsersService } = require("../../services/users.service");
 const { Auth } = require("../../middlewares/auth.middleware");
 const { PlacesService } = require("../../services/places.service");
 const { StorageService } = require("../../services/storage.service");
 const { QuestionsService } = require("../../services/questions.service");
+const { logger } = require("firebase-functions");
 /* eslint-enable no-unused-vars */
 
 /**
  * @param {Express.Application} app 
  * @param {TravelPlansService} travelPlansService
- * @param {AIService} aiService 
+ * @param {TravelPlanAIservice} aiService 
  * @param {UsersService} userService 
  * @param {PlacesService} placesService 
  * @param {StorageService} storageService 
@@ -26,14 +25,23 @@ const { QuestionsService } = require("../../services/questions.service");
  * @param {Auth} authMiddleware 
  */
 function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, questionService, authMiddleware) {
-    app.get("/v1/travel-plans/:userId", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async (req, res, next) => {
-        const { userId } = req.state.input.params;
+    app.get("/v1/travel-plans/", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async (req, res, next) => {
+        const { externalId } = req.state.user;
+
+        let user = null;
+        try {
+            user = await userService.findByExternalId(externalId);
+        } catch (error) {
+            return next(new InternalException(`An error occurred finding user ${externalId}`, error));
+        }
+
+        if (!user) return next(new NotFoundException(`An error occurred finding user ${externalId}`));
 
         let travelPlans = null;
         try {
-            travelPlans = await travelPlansService.listForUserId(userId);
+            travelPlans = await travelPlansService.listForUserId(user.id);
         } catch (error) {
-            return next(new InternalException(`An error occurred finding travel plans for user ${userId}`, error));
+            return next(new InternalException(`An error occurred finding travel plans for user ${user.id}`, error));
         }
 
         return res.json(travelPlans);
@@ -58,16 +66,26 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(places);
     });
 
-    app.post("/v1/travel-plans/:userId", validateInput(schemas.postTravelPlan), authMiddleware.authenticate(), async (req, res, next) => {
-        const { userId } = req.state.input.params;
+    app.post("/v1/travel-plans/", validateInput(schemas.postTravelPlan), authMiddleware.authenticate(), async (req, res, next) => {
+        const { externalId } = req.state.user;
+
+        let user = null;
+        try {
+            user = await userService.findByExternalId(externalId);
+        } catch (error) {
+            return next(new InternalException(`An error occurred finding user ${externalId}`, error));
+        }
+
+        if (!user) return next(new NotFoundException(`An error occurred finding user ${externalId}`));
+
         const data = req.state.input.body;
 
         let travelPlan = null;
         try {
-            data.userId = userId;
+            data.userId = user.id;
             travelPlan = await travelPlansService.create(data);
         } catch (error) {
-            return next(new InternalException(`An error occurred creating travel plan for user ${userId}`, error));
+            return next(new InternalException(`An error occurred creating travel plan for user ${user.id}`, error));
         }
 
         return res.json(travelPlan);
@@ -77,8 +95,8 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         const { externalId } = req.state.user;
         const { planId } = req.state.input.params;
 
-        let travelPlan = new TravelPlan();
-        let user = new User();
+        let travelPlan = null;
+        let user = null;
         try {
             [travelPlan, user] = await Promise.all([travelPlansService.findById(planId), userService.findByExternalId(externalId)]);
         } catch (error) {
@@ -88,11 +106,12 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         if (!travelPlan)
             return next(new NotFoundException(`An error occurred finding travel plan ${planId}`));
 
-        if (!user)
+        if (!user || !user.birthday || !user.disabilities || !user.restaurantDietTags)
             return next(new NotFoundException(`An error occurred finding user ${externalId}`));
 
         try {
-            const age = Math.round((new Date() - user.birthday.getFullYear()) * 3.1709791983764586e-11);
+            // This value means 1 / (365 * 24 * 60 * 60 * 1000)
+            const age = Math.round((new Date() - user.birthday.toDate()) * 3.1709791983764586e-11);
             const tripDays = travelPlan.travelDuration;
             const attractions = travelPlan.tourismTypes.join(", ");
             const preferredTime = travelPlan.preferredTime;
@@ -104,7 +123,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const arrivalTime = travelPlan.arrivalHour;
             const departureTime = travelPlan.departureHour;
 
-            const numberText = travelPlan.travelerCount === 1 ? "a solo" : travelPlan.travelerCount.toString();
+            const numberText = travelPlan.travelerCount === 1 ? "a solo" : `${travelPlan.travelerCount} persons`;
 
             const hasDisabilities = disabilities.length > 0;
             const hasDietRestrictions = dietRestrictions.length > 0;
@@ -113,120 +132,124 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const hasAndInText = !hasDietRestrictions || !hasDisabilities ? "" : " and ";
             const considerations = hasDisabilities || hasDietRestrictions ? ` Please consider that i have ${disabilitiesText}${hasAndInText}${dietText}.` : "";
 
-            const plan = await aiService.generateResponse(`I'm ${age} years old and planning a ${tripDays}-day and ${numberText} trip to Rome. I have interest in: ${attractions} and culinary experiences. My schedule is from ${schedule}. Could you please create a travel plan and tourist attractions, and restaurants with suggested times for every visit. Consider that i will arrive at ${arrivalTime} on day 1 and departure at ${departureTime} on last day;${considerations} Respond with a json string`);
-            travelPlan.plan = JSON.parse(plan);
+            const prompt = `I'm ${age} years old and planning a ${tripDays}-day and ${numberText} trip to Rome. I have interest in: ${attractions} and culinary experiences. My schedule is from ${schedule}. Could you please create a travel plan and tourist attractions, and restaurants with suggested times for every visit. Consider that i will arrive at ${arrivalTime} on day 1 and departure at ${departureTime} on last day;${considerations} Respond with a json string`;
+            const plan = await aiService.generateResponse(prompt);
+
+            travelPlan.plan = plan;
         } catch (error) {
             return next(new InternalException(`An error occurred generating travel plan for user ${user.id}`, error));
         }
 
         try {
-            const restaurantOp = [];
-            const locationOp = [];
+            // const restaurantOp = [];
+            // const locationOp = [];
 
-            const searchPlaces = (list, nameKey) => {
-                const operations = [];
+            // const searchPlaces = (list, nameKey) => {
+            //     const operations = [];
 
-                for (let index = 0; index < list.length; index++) {
-                    const name = list[index][nameKey];
-                    operations.push(placesService.searchPaginated(0, 1, name.toLowerCase()));
-                }
+            //     for (let index = 0; index < list.length; index++) {
+            //         const name = list[index][nameKey];
+            //         operations.push(placesService.searchPaginated(0, 1, name.toLowerCase()));
+            //     }
 
-                return operations;
-            }
+            //     return operations;
+            // }
 
-            for (let index = 0; index < travelPlan.plan.days.length; index++) {
-                const day = travelPlan.plan.days[index];
-                const { restaurants, schedule } = day;
-                
-                restaurantOp.push(...searchPlaces(restaurants, "name"));
-                locationOp.push(...searchPlaces(schedule, "location"));
-            }
+            // for (let index = 0; index < travelPlan.plan.days.length; index++) {
+            //     const day = travelPlan.plan.days[index];
+            //     const { restaurants, schedule } = day;
 
-            const [
-                restaurantResults,
-                locationResults,
-                locationDefaultQuestions,
-                restaurantDefaultQuestions
-            ] = await Promise.all([
-                Promise.all(locationOp),
-                Promise.all(restaurantOp),
-                questionService.findQuestions("tag", "tourist_attraction"),
-                questionService.findQuestions("tag", "restaurant"),
-            ]);
+            //     restaurantOp.push(...searchPlaces(restaurants, "name"));
+            //     locationOp.push(...searchPlaces(schedule, "location"));
+            // }
 
-            const locationQuestions = locationResults.map((location) => {
-                if (location.length === 0 || location[0].types.length === 0)
-                    return locationDefaultQuestions;
+            // const [
+            //     restaurantResults,
+            //     locationResults,
+            //     locationDefaultQuestions,
+            //     restaurantDefaultQuestions
+            // ] = await Promise.all([
+            //     Promise.all(locationOp),
+            //     Promise.all(restaurantOp),
+            //     questionService.findQuestions("tag", "tourist_attraction"),
+            //     questionService.findQuestions("tag", "restaurant"),
+            // ]);
+            // logger.debug(locationResults, restaurantResults);
+            // const locationQuestions = await Promise.all(locationResults.map((location) => {
+            //     if (location.length === 0 || location[0].types.length === 0)
+            //         return locationDefaultQuestions;
 
-                return questionService.findQuestions("tag", location[0].types[0]);
-            });
-            const restaurantQuestions = restaurantResults.map((restaurant) => {
-                if (restaurant.length === 0)
-                    return restaurantDefaultQuestions;
+            //     return questionService.findQuestions("tag", location[0].types[0]);
+            // }));
+            // const restaurantQuestions = await Promise.all(restaurantResults.map((restaurant) => {
+            //     if (restaurant.length === 0)
+            //         return restaurantDefaultQuestions;
 
-                return new Promise((resolve, reject) => {
-                    const ops = [restaurantDefaultQuestions];
-                    const place = restaurant[0];
-                    if (place.servesWine) ops.push(questionService.findQuestions("food", "wine"));
-                    if (place.servesBeer) ops.push(questionService.findQuestions("food", "beer"));
-                    if (place.servesBreakfast) ops.push(questionService.findQuestions("food", "breakfast"));
+            //     return new Promise((resolve, reject) => {
+            //         const ops = [restaurantDefaultQuestions];
+            //         const place = restaurant[0];
+            //         if (place.servesWine) ops.push(questionService.findQuestions("food", "wine"));
+            //         if (place.servesBeer) ops.push(questionService.findQuestions("food", "beer"));
+            //         if (place.servesBreakfast) ops.push(questionService.findQuestions("food", "breakfast"));
 
-                    Promise.all(ops).then((result) => resolve(result.flat(1))).catch((error) => reject(error));
-                });
-            });
+            //         Promise.all(ops).then((result) => resolve(result.flat(1))).catch((error) => reject(error));
+            //     });
+            // }));
+            // logger.debug(locationQuestions, restaurantQuestions);
 
-            for (let index = 0; index < locationQuestions.length; index++) {
-                const questions = locationQuestions[index];
+            // for (let index = 0; index < locationQuestions.length; index++) {
+            //     const questions = locationQuestions[index];
 
-                let operations = 0;
-                for (let i = 0; i < travelPlan.plan.days.length; i++) {
-                    const day = travelPlan.plan.days[i];
-                    if (operations + day.schedule.length < index) {
-                        operations += day.schedule.length;
-                        continue;
-                    }
-                    for (let j = 0; j < day.schedule.length; j++) {
-                        const scheduleIndex = index - operations;
-                        if (scheduleIndex != j) continue;
+            //     let operations = 0;
+            //     for (let i = 0; i < travelPlan.plan.days.length; i++) {
+            //         const day = travelPlan.plan.days[i];
+            //         if (operations + day.schedule.length < index) {
+            //             operations += day.schedule.length;
+            //             continue;
+            //         }
+            //         for (let j = 0; j < day.schedule.length; j++) {
+            //             const scheduleIndex = index - operations;
+            //             if (scheduleIndex != j) continue;
 
-                        travelPlan.plan.days[i].day.schedule[j].questions = questions;
-                        break;
-                    }
-                    break;
-                }
-            }
+            //             travelPlan.plan.days[i].schedule[j].questions = questions;
+            //             break;
+            //         }
+            //         break;
+            //     }
+            // }
 
-            for (let index = 0; index < restaurantQuestions.length; index++) {
-                const questions = restaurantQuestions[index];
+            // for (let index = 0; index < restaurantQuestions.length; index++) {
+            //     const questions = restaurantQuestions[index];
 
-                let operations = 0;
-                for (let i = 0; i < travelPlan.plan.days.length; i++) {
-                    const day = travelPlan.plan.days[i];
-                    if (operations + day.restaurants.length < index) {
-                        operations += day.restaurants.length;
-                        continue;
-                    }
-                    for (let j = 0; j < day.restaurants.length; j++) {
-                        const restaurantIndex = index - operations;
-                        if (restaurantIndex != j) continue;
+            //     let operations = 0;
+            //     for (let i = 0; i < travelPlan.plan.days.length; i++) {
+            //         const day = travelPlan.plan.days[i];
+            //         if (operations + day.restaurants.length < index) {
+            //             operations += day.restaurants.length;
+            //             continue;
+            //         }
+            //         for (let j = 0; j < day.restaurants.length; j++) {
+            //             const restaurantIndex = index - operations;
+            //             if (restaurantIndex != j) continue;
 
-                        travelPlan.plan.days[i].day.restaurants[j].questions = questions;
-                        break;
-                    }
-                    break;
-                }
-            }
+            //             travelPlan.plan.days[i].restaurants[j].questions = questions;
+            //             break;
+            //         }
+            //         break;
+            //     }
+            // }
+            // logger.debug(travelPlan.plan);
+
+            await travelPlansService.update(planId, travelPlan);
         } catch (error) {
             return next(new InternalException(`An error occurred generating travel plan for user ${user.id}`, error));
         }
 
-        travelPlan = await travelPlansService.update(planId, travelPlan);
         return res.json(travelPlan);
     });
 
     app.post("/v1/travel-plans/:planId/start", validateInput(schemas.postStartTravelPlan), authMiddleware.authenticate(), async (req, res, next) => {
         const { planId } = req.state.input.params;
-        const data = req.state.input.body;
 
         let travelPlan = null;
 
@@ -241,7 +264,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
 
         try {
             travelPlan.startDate = new Date();
-            travelPlan = await travelPlansService.update(data);
+            travelPlan = await travelPlansService.update(planId, travelPlan);
         } catch (error) {
             return next(new InternalException(`An error occurred updating plan ${planId}`, error));
         }
@@ -251,7 +274,6 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
 
     app.post("/v1/travel-plans/:planId/finish", validateInput(schemas.postFinishTravelPlan), authMiddleware.authenticate(), async (req, res, next) => {
         const { planId } = req.state.input.params;
-        const data = req.state.input.body;
 
         let travelPlan = null;
 
@@ -266,7 +288,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
 
         try {
             travelPlan.endDate = new Date();
-            travelPlan = await travelPlansService.update(data);
+            travelPlan = await travelPlansService.update(planId, travelPlan);
         } catch (error) {
             return next(new InternalException(`An error occurred updating plan ${planId}`, error));
         }

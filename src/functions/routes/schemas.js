@@ -32,9 +32,6 @@ const schemas = {
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
-        params: Joi.object().keys({
-            userId: Joi.string().uuid().required()
-        }).required(),
         body: Joi.object().keys({
             name: Joi.string().regex(/(\w+\s?)+/),
             birthday: Joi.date(),
@@ -45,10 +42,7 @@ const schemas = {
     getTravelPlans: Joi.object().keys({
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
-            .required(),
-        params: Joi.object().keys({
-            userId: Joi.string().uuid().required()
-        }).required(),
+            .required()
     }).required(),
     getPlaces: Joi.object().keys({
         headers: Joi.object(baseSchemas.authorizationSchema)
@@ -64,14 +58,11 @@ const schemas = {
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
-        params: Joi.object().keys({
-            userId: Joi.string().uuid().required()
-        }).required(),
         body: Joi.object().keys({
             preferredTime: Joi.string()
                 .allow("morning", "afternoon", "night")
                 .required(),
-            tourismTypes: Joi.array().items(Joi.string()).required(),
+            tourismTypes: Joi.array().items(Joi.string()).min(1).required(),
             travelerCount: Joi.number().positive().required(),
             travelDuration: Joi.number().positive().required(),
             arrivalHour: Joi.number().integer().min(0).max(23),

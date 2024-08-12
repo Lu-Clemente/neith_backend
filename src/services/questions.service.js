@@ -19,12 +19,12 @@ class QuestionsService {
         const initialQuery = getFirestore(this.databaseName).collection("questions").where("type", "==", type);
         if(subtype) initialQuery.where("subtype", "==", subtype);
         const result = await initialQuery.get();
-        return result.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
+        return result.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
     }
 
     async getAll() {
         const result = await getFirestore(this.databaseName).collection("questions").get();
-        return result.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
+        return result.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
     }
 
     /**

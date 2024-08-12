@@ -15,6 +15,18 @@ class AIService {
     }
 }
 
+function trimNonJSON(text) {
+    if (text[text.length - 1] === "}" && text[0] === "{") return text;
+
+    const startIndex = text.indexOf("{");
+    if (startIndex === -1) return null;
+
+    const endIndex = text.lastIndexOf("}");
+    if (endIndex === -1) return null;
+
+    return text.slice(startIndex, endIndex - startIndex + 1);
+}
+
 class TravelPlanAIservice extends AIService {
     constructor(firebaseConfig) {
         super(firebaseConfig);
@@ -68,11 +80,7 @@ class TravelPlanAIservice extends AIService {
         const result = await this.model.generateContent(`Follow JSON schema.<JSONSchema>${JSON.stringify(schema)}</JSONSchema>`);
         const response = result.response;
         let responseText = response.text();
-        return JSON.parse(
-            responseText.at(responseText.length - 1) === "\\" ?
-                responseText.slice(0, responseText.length - 2) :
-                responseText
-        );
+        return JSON.parse(trimNonJSON(responseText));
     }
 }
 
@@ -102,11 +110,7 @@ class QuestionsAIservice extends AIService {
         const result = await this.model.generateContent(`Follow JSON schema.<JSONSchema>${JSON.stringify(schema)}</JSONSchema>`);
         const response = result.response;
         let responseText = response.text();
-        return JSON.parse(
-            responseText.at(responseText.length - 1) === "\\" ?
-                responseText.slice(0, responseText.length - 2) :
-                responseText
-        );
+        return JSON.parse(trimNonJSON(responseText));
     }
 }
 

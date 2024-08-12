@@ -1,7 +1,7 @@
 class User {
     name = "";
     externalId = "";
-    birthday = new Date();
+    birthday = "";
     restaurantDietTags = [];
     disabilities = [];
 }
