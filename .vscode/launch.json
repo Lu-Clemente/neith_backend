@@ -7,6 +7,36 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Launch test-ai",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/functions/test-ai.js",
+            "envFile": "${workspaceFolder}/src/functions/.env"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch type-questions",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/functions/type-questions.js",
+            "envFile": "${workspaceFolder}/src/functions/.env"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch type-search",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/functions/type-search.js",
+            "envFile": "${workspaceFolder}/src/functions/.env"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch search-optimizer",
             "skipFiles": [
                 "<node_internals>/**"

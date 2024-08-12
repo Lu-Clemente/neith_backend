@@ -17,26 +17,16 @@ async function main() {
 
     const placeService = new PlacesService(config.get("database.db_name"));
     const places = await placeService.getPlaces();
+    const result = {};
     for (let index = 0; index < places.length; index++) {
         const place = places[index];
 
-        if(place.search) {
-            console.log(`Place ${place.uid} already has search field`);
-            continue;
+        for (let j = 0; j < place.types.length; j++) {
+            result[place.types[j]] = "";
         }
-
-        console.log(`Optimizing place ${place.uid}`);
-
-        const name = place.displayName.text;
-        const lowerCase = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/, "");
-        const keywords = lowerCase.split(" ");
-        place.search = {
-            keywords,
-            text: lowerCase
-        };
-        console.log(`Updating properties ${JSON.stringify(place.search)}`);
-        await placeService.updatePlace(place.uid, place);
     }
+
+    console.log(Object.keys(result));
 
     console.log("Finished places scraper bot");
 }
