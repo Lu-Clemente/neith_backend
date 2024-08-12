@@ -75,11 +75,12 @@ class PlacesService {
     }
 
     async searchPaginated(offset = 0, limit = 20, text = "") {
+        const treatedText = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/, "");
         const response = await getFirestore(this.databaseName)
             .collection(this.collectionName)
-            .where("search.text", ">=", text)
-            .where("search.text", "<=", text + "\uf8ff")
-            .where("search.keywords", "array-contains", text)
+            .where("search.text", ">=", treatedText)
+            .where("search.text", "<=", treatedText + "\uf8ff")
+            .where("search.keywords", "array-contains", treatedText)
             .offset(offset)
             .limit(limit)
             .get();
