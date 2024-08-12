@@ -8,12 +8,14 @@ const baseSchemas = {
 
 const schemas = {
     postLogin: Joi.object().keys({
+        headers: Joi.object().unknown(),
         body: Joi.object().keys({
             email: Joi.string().email().required(),
             password: Joi.string().min(6).required(),
         }),
     }).required(),
     postRegister: Joi.object().keys({
+        headers: Joi.object().unknown(),
         body: Joi.object().keys({
             name: Joi.string().regex(/(\w+\s?)+/).required(),
             birthday: Joi.date().required(),
@@ -21,6 +23,7 @@ const schemas = {
         }),
     }).required(),
     postForgotPassword: Joi.object().keys({
+        headers: Joi.object().unknown(),
         params: Joi.object().keys({
             email: Joi.string().email().required(),
         }),
@@ -29,6 +32,9 @@ const schemas = {
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
+        params: Joi.object().keys({
+            userId: Joi.string().uuid().required()
+        }).required(),
         body: Joi.object().keys({
             name: Joi.string().regex(/(\w+\s?)+/),
             birthday: Joi.date(),
@@ -40,6 +46,9 @@ const schemas = {
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
+        params: Joi.object().keys({
+            userId: Joi.string().uuid().required()
+        }).required(),
     }).required(),
     getPlaces: Joi.object().keys({
         headers: Joi.object(baseSchemas.authorizationSchema)
@@ -49,12 +58,15 @@ const schemas = {
             offset: Joi.number().integer().min(0).default(0).optional(),
             limit: Joi.number().integer().min(0).default(20).optional(),
             text: Joi.string().empty("").default(""),
-        }).default({start: 0, length: 20, text: ""}),
+        }).default({ start: 0, length: 20, text: "" }),
     }).required(),
     postTravelPlan: Joi.object().keys({
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
+        params: Joi.object().keys({
+            userId: Joi.string().uuid().required()
+        }).required(),
         body: Joi.object().keys({
             preferredTime: Joi.string()
                 .allow("morning", "afternoon", "night")
@@ -70,25 +82,25 @@ const schemas = {
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
-        query: Joi.object().keys({
-            planId: Joi.number().positive().required(),
-        }).required(),
+        params: Joi.object().keys({
+            planId: Joi.string().uuid().required()
+        }).required()
     }).required(),
     postStartTravelPlan: Joi.object().keys({
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
-        query: Joi.object().keys({
-            planId: Joi.number().positive().required(),
-        }).required(),
+        params: Joi.object().keys({
+            planId: Joi.string().uuid().required()
+        }).required()
     }).required(),
     postFinishTravelPlan: Joi.object().keys({
         headers: Joi.object(baseSchemas.authorizationSchema)
             .unknown()
             .required(),
-        query: Joi.object().keys({
-            planId: Joi.number().positive().required(),
-        }).required(),
+        params: Joi.object().keys({
+            planId: Joi.string().uuid().required()
+        }).required()
     }).required(),
 };
 

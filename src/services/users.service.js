@@ -1,5 +1,6 @@
 const { getFirestore } = require("firebase-admin/firestore");
 const { User } = require("../models/user");
+const { v4: uuidV4 } = require("uuid");
 
 class UsersService {
     constructor(databaseName) {
@@ -17,8 +18,10 @@ class UsersService {
         return batch.commit();
     }
 
-    create(data) {
-        return getFirestore(this.databaseName).collection(this.collectionName).doc().create(data);
+    async create(data) {
+        const id = uuidV4();
+        await getFirestore(this.databaseName).collection(this.collectionName).doc(id).create(data);
+        return { ...data, id };
     }
 
     update(id, data) {

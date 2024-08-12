@@ -5,13 +5,24 @@ const { validateInput } = require("../../middlewares/input-validation");
 const { InternalException, NotFoundException } = require("../../models/errors");
 const { putChangeValue, arrayEquals } = require("../../utils/update-functions");
 
+/* eslint-disable no-unused-vars */
+const { UsersService } = require("../../services/users.service");
+const { Auth } = require("../../middlewares/auth.middleware");
+/* eslint-enable no-unused-vars */
+
+/**
+ * 
+ * @param {Express.Application} app 
+ * @param {UsersService} userService 
+ * @param {Auth} authMiddleware 
+ */
 function configureUserRoutes(app, userService, authMiddleware) {
     app.post("/v1/users/", validateInput(schemas.postRegister), async (req, res, next) => {
         const userInput = req.state.input.body;
 
         let user = null;
         try {
-            user = await userService.createOne(userInput);
+            user = await userService.create(userInput);
         } catch (error) {
             next(new InternalException("An error occurred creating user", error));
         }
@@ -20,7 +31,7 @@ function configureUserRoutes(app, userService, authMiddleware) {
     });
 
     app.put("/v1/users/:userId", validateInput(schemas.putUser), authMiddleware.authenticate(), async (req, res, next) => {
-        const { userId } = req.state.params;
+        const { userId } = req.state.input.params;
         const userInput = req.state.input.body;
 
         let user = null;
@@ -37,10 +48,9 @@ function configureUserRoutes(app, userService, authMiddleware) {
         const updatedUser = {
             name: putChangeValue(user.name, userInput.name),
             birthday: putChangeValue(user.birthday, userInput.birthday),
-            email: putChangeValue(user.email, userInput.email),
-            password: user.password,
             disabilities: arrayEquals(user.disabilities, userInput.disabilities),
-            restaurantDietTags: arrayEquals(user.restaurantDietTags, userInput.restaurantDietTags)
+            restaurantDietTags: arrayEquals(user.restaurantDietTags, userInput.restaurantDietTags),
+            externalId: user.externalId
         };
         try {
             user = await userService.update(userId, updatedUser);
@@ -48,7 +58,7 @@ function configureUserRoutes(app, userService, authMiddleware) {
             next(new InternalException("An error occurred creating user", error));
         }
 
-        return res.json(user);
+        return res.json(updatedUser);
     });
 }
 

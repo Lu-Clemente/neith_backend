@@ -11,6 +11,7 @@ function putChangeValue(oldValue, newValue) {
 
 function arrayEquals(oldValue, newValue) {
     if (!newValue) return oldValue;
+    if (!oldValue && newValue) return newValue;
 
     if (oldValue.length != newValue.length) return newValue;
     if (oldValue.some((item, index) => item != newValue[index])) return newValue;
