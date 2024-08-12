@@ -1,36 +1,39 @@
 # neith_backend
+
 Neith App - Tourism assistant using Google's Gemini
 
-## Pré-requisitos
+## Prerequisites
 
 - Node.js
 - npm
 - Firebase CLI
 
-[Saiba mais](https://firebase.google.com/docs/functions)
+[Learn more](https://firebase.google.com/docs/functions)
 
-## Instalação
+## Installation
 
-1. Clone este repositório:
-    ```bash
-    git clone https://github.com/Lu-Clemente/neith_backend.git
-    ```
-2. Navegue até o diretório do projeto:
-    ```bash
-    cd neith_backend
-    ```
-3. Instale as dependências:
-    ```bash
-    npm install
-    ```
+1. Clone this repository:
+```bash
+git clone https://github.com/Lu-Clemente/neith_backend.git
+```
 
-## Uso
+2. Navigate to the project directory:
+```bash
+cd neith_backend
+```
 
-Para iniciar o servidor local do Firebase, execute o seguinte comando:
+3. Install dependencies:
+```bash
+npm install
+```
 
+## Usage
+
+To start the Firebase local server, run the following command:
 ```bash
 firebase emulators:start
 ```
 
-Depois acesse na url indicada a interface:
-> Normalmente [http://localhost:4000](http://localhost:4000)
+Then access the interface at the indicated URL:
+
+> Usually [http://localhost:4000](http://localhost:4000)
