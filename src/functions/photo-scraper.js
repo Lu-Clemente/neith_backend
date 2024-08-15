@@ -37,7 +37,7 @@ async function getPlaces(query) {
 
         console.log(`Getting place ${place.displayName.text} (${place.uid})`);
 
-        const photoName = place.photos[0]?.name;
+        const photoName = (place.photos || [{}])[0].name;
         const filePath = `./data/temp/photos/${place.uid}.jpg`;
         const writeStream = filesystem.createWriteStream(filePath);
         try {
@@ -47,7 +47,7 @@ async function getPlaces(query) {
                 .then((output) => {
                     return new Promise((resolve, reject) => {
                         output.data.pipe(writeStream);
-                        error = null;
+                        let error = null;
                         writeStream.on("error", (err) => {
                             writeStream.close();
                             error = err;
@@ -67,14 +67,14 @@ async function getPlaces(query) {
 
         const photoId = uuidV4();
         const photoPath = `places/${place.uid}/${photoId}.jpg`;
-        
+
         console.log(`Uploading file ${photoPath}`);
         await storage.upload(filePath, { destination: photoPath });
-        
+
         console.log(`Updating photo path in document ${place.uid}`);
         place.photoPath = photoPath;
         await placeService.updatePlace(place.uid, place);
-        
+
         console.log(`Deleting file ${filePath}`);
         await filesystem.promises.unlink(filePath);
     }

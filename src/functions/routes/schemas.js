@@ -59,9 +59,10 @@ const schemas = {
             .unknown()
             .required(),
         body: Joi.object().keys({
-            preferredTime: Joi.string()
-                .allow("morning", "afternoon", "night")
-                .required(),
+            preferredTime: Joi.array()
+                .items(
+                    Joi.string().allow("morning", "afternoon", "night")
+                ).required(),
             tourismTypes: Joi.array().items(Joi.string()).min(1).required(),
             travelerCount: Joi.number().positive().required(),
             travelDuration: Joi.number().positive().required(),

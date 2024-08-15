@@ -54,9 +54,14 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         try {
             places = await placesService.searchPaginated(offset, limit, text);
 
-            const photos = await Promise.all(places.map((place) => storageService.getDownloadURL(place.photoPath)));
+            const photos = await Promise.all(
+                places.map((place) => Promise.all([
+                    storageService.getDownloadURL(place.photoPath),
+                    storageService.getDownloadURL(place.thumbPath)])));
+
             places = places.map((place, index) => {
-                place.photoUrl = photos[index];
+                place.photoUrl = photos[index][0];
+                place.thumbUrl = photos[index][1];
                 return place;
             });
         } catch (error) {
@@ -83,6 +88,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         let travelPlan = null;
         try {
             data.userId = user.id;
+            data.thumbPath = "places/ru8d5eWqMKUU9GVmaMAc/eb5294ce-6ffe-46c9-adfd-bba12818b5cb.jpg";
             travelPlan = await travelPlansService.create(data);
         } catch (error) {
             return next(new InternalException(`An error occurred creating travel plan for user ${user.id}`, error));
@@ -114,7 +120,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const age = Math.round((new Date() - user.birthday.toDate()) * 3.1709791983764586e-11);
             const tripDays = travelPlan.travelDuration;
             const attractions = travelPlan.tourismTypes.join(", ");
-            const preferredTime = travelPlan.preferredTime;
+            const preferredTime = (Array.isArray(travelPlan.preferredTime) ? travelPlan.preferredTime[0] : travelPlan.preferredTime);
             const schedule = preferredTime === "morning" ? "7AM to 11AM" : preferredTime === "afternoon" ? "12PM to 5PM" : "6PM to 11PM";
 
             const disabilities = user.disabilities.join(", ");
