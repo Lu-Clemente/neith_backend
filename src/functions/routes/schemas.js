@@ -67,6 +67,7 @@ const schemas = {
             travelDuration: Joi.number().positive().required(),
             arrivalHour: Joi.number().integer().min(0).max(23),
             departureHour: Joi.number().integer().min(0).max(23),
+            name: Joi.string().min(4).max(24).required()
         }).required(),
     }).required(),
     postGenerateTravelPlan: Joi.object().keys({

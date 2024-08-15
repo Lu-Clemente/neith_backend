@@ -83,7 +83,6 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         let travelPlan = null;
         try {
             data.userId = user.id;
-            data.name = "Rome, Italy";
             travelPlan = await travelPlansService.create(data);
         } catch (error) {
             return next(new InternalException(`An error occurred creating travel plan for user ${user.id}`, error));
