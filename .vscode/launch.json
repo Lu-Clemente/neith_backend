@@ -11,8 +11,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/functions/test-ai.js",
-            "envFile": "${workspaceFolder}/src/functions/.env"
+            "program": "${workspaceFolder}/src/bots/test-ai.js",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "node",
@@ -21,8 +21,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/functions/type-questions.js",
-            "envFile": "${workspaceFolder}/src/functions/.env"
+            "program": "${workspaceFolder}/src/bots/type-questions.js",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "node",
@@ -31,8 +31,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/functions/type-search.js",
-            "envFile": "${workspaceFolder}/src/functions/.env"
+            "program": "${workspaceFolder}/src/bots/type-search.js",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "node",
@@ -41,8 +41,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/functions/search-optimizer.js",
-            "envFile": "${workspaceFolder}/src/functions/.env"
+            "program": "${workspaceFolder}/src/bots/search-optimizer.js",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "node",
@@ -51,8 +51,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/functions/photo-scraper.js",
-            "envFile": "${workspaceFolder}/src/functions/.env"
+            "program": "${workspaceFolder}/src/bots/photo-scraper.js",
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "node",
@@ -61,8 +61,8 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/src/functions/places-scraper.js",
-            "envFile": "${workspaceFolder}/src/functions/.env"
+            "program": "${workspaceFolder}/src/bots/places-scraper.js",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
