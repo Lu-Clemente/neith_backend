@@ -11,24 +11,28 @@ class PlacesService {
 
     /**
      * Creates a new place
-     * @param {Place} place The place to create
+     * @param {Place} data The place to create
      * @returns {Promise<Place>}
      */
-    createPlace(place) {
-        return getFirestore(this.databaseName).collection(this.collectionName).add(place);
+    createPlace(data) {
+        data.createdAt = new Date().toISOString();
+        data.updatedAt = new Date().toISOString();
+        return getFirestore(this.databaseName).collection(this.collectionName).add(data);
     }
 
     /**
      * Creates multiple places
-     * @param {Place[]} places The places to create
+     * @param {Place[]} items The places to create
      * @returns {Promise<Place[]>}
      */
-    createPlaces(places) {
+    createPlaces(items) {
         const database = getFirestore(this.databaseName);
         const batch = database.batch();
-        places.forEach((place) => {
+        items.forEach((data) => {
+            data.createdAt = new Date().toISOString();
+            data.updatedAt = new Date().toISOString();
             const doc = database.collection(this.collectionName).doc();
-            batch.set(doc, place);
+            batch.set(doc, data);
         });
         return batch.commit();
     }
@@ -39,31 +43,6 @@ class PlacesService {
      */
     count() {
         return getFirestore(this.databaseName).collection(this.collectionName).count().get();
-    }
-
-    /**
-     * Updates the increment_id to the latest index
-     * @param {DocumentReference} itemRef 
-     * @param {number} incrementId 
-     * @returns {Promise<void>}
-     */
-    updateIncrementId(itemRef, incrementId) {
-        return itemRef.set({ increment_id: incrementId }, { merge: true })
-    }
-
-    /**
-     * Retrieves the last increment_id stored in the database
-     * @returns {Promise<number>}
-     */
-    async getLastIncrementId() {
-        const response = await getFirestore()
-            .collection("items")
-            .orderBy("increment_id", "desc")
-            .limit(1)
-            .get();
-
-        if (response.docs.length === 0) return 0;
-        return response.docs[0].data().increment_id;
     }
 
     async findRestaurants() {
@@ -90,6 +69,7 @@ class PlacesService {
     }
 
     updatePlace(id, data) {
+        data.updatedAt = new Date().toISOString();
         return getFirestore(this.databaseName)
             .collection(this.collectionName)
             .doc(id)

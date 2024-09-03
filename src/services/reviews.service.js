@@ -8,9 +8,11 @@ class ReviewsService {
     createReviews(reviews) {
         const database = getFirestore(this.databaseName);
         const batch = database.batch();
-        reviews.forEach((review) => {
+        reviews.forEach((data) => {
+            data.createdAt = new Date().toISOString();
+            data.updatedAt = new Date().toISOString();
             const doc = database.collection("placeReviews").doc();
-            batch.set(doc, review);
+            batch.set(doc, data);
         });
         return batch.commit();
     }

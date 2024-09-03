@@ -11,6 +11,8 @@ class TravelPlansService {
     }
 
     async create(data) {
+        data.createdAt = new Date().toISOString();
+        data.updatedAt = new Date().toISOString();
         const id = uuidV4();
         await getFirestore(this.databaseName).collection(this.collectionName).doc(id).set(data);
         return { ...data, id };
@@ -30,15 +32,18 @@ class TravelPlansService {
     }
 
     update(id, data) {
+        data.updatedAt = new Date().toISOString();
         return getFirestore(this.databaseName).collection(this.collectionName).doc(id).update(data);
     }
 
     createMany(items) {
         const database = getFirestore(this.databaseName);
         const batch = database.batch();
-        items.forEach((review) => {
+        items.forEach((item) => {
+            item.createdAt = new Date().toISOString();
+            item.updatedAt = new Date().toISOString();
             const doc = database.collection(this.collectionName).doc();
-            batch.set(doc, review);
+            batch.set(doc, item);
         });
         return batch.commit();
     }
