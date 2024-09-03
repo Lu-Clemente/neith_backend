@@ -30,7 +30,7 @@ function configureUserRoutes(app, userService, authMiddleware) {
         return res.json(user);
     });
 
-    app.put("/v1/users/:userId", validateInput(schemas.putUser), authMiddleware.authenticate(), async (req, res, next) => {
+    app.put("/v1/users/", validateInput(schemas.putUser), authMiddleware.authenticate(), async (req, res, next) => {
         const { externalId } = req.state.user;
         const userInput = req.state.input.body;
 

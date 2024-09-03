@@ -39,7 +39,10 @@ async function getPlaces(query) {
         }
 
         console.log(`Found ${places.length} places, inserting`);
-        await Promise.all([placeService.createPlaces(places), reviewsService.createReviews(contextualContents)]);
+        await Promise.all([
+            placeService.createPlaces(places.map((place) => ({...place, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()}))), 
+            reviewsService.createReviews(contextualContents.map((content) => ({...content, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()})))
+        ]);
         console.log("Places inserted successfully");
 
         pageToken = nextPageToken;
@@ -58,9 +61,10 @@ async function getPlaces(query) {
 async function main() {
     console.log("Starting places scraper bot");
     const queries = config.get("places_scraper.maps_queries");
+    const city = "New York";
     for (let index = 0; index < queries.length; index++) {
         const query = queries[index];
-        await getPlaces(query);
+        await getPlaces(query + " in " + city);
     }
     console.log("Finished places scraper bot");
 

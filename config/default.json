@@ -22,18 +22,18 @@
     "places_scraper": {
         "maps_api_key": "test-key",
         "maps_queries": [
-            "restaurants in Rome",
-            "historical landmarks in Rome",
-            "nightclubs in Rome",
-            "parks in Rome",
-            "museums in Rome",
-            "religious centers in Rome",
-            "bars in Rome",
-            "vegan restaurants in Rome",
-            "vegetarian restaurants in Rome",
-            "historical heritage in Rome",
-            "malls in Rome",
-            "craft fairs in Rome"
+            "restaurants",
+            "historical landmarks",
+            "nightclubs",
+            "parks",
+            "museums",
+            "religious centers",
+            "bars",
+            "vegan restaurants",
+            "vegetarian restaurants",
+            "historical heritage",
+            "malls",
+            "craft fairs"
         ]
     }
 }

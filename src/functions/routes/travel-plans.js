@@ -56,8 +56,9 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
 
             const photos = await Promise.all(
                 places.map((place) => Promise.all([
-                    storageService.getDownloadURL(place.photoPath),
-                    storageService.getDownloadURL(place.thumbPath)])));
+                    place.photoPath ? storageService.getDownloadURL(place.photoPath) : Promise.resolve(""),
+                    place.thumbPath ? storageService.getDownloadURL(place.thumbPath) : Promise.resolve(""),
+                ])));
 
             places = places.map((place, index) => {
                 place.photoUrl = photos[index][0];
@@ -112,8 +113,10 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         if (!travelPlan)
             return next(new NotFoundException(`An error occurred finding travel plan ${planId}`));
 
-        if (!user || !user.birthday || !user.disabilities || !user.restaurantDietTags)
-            return next(new NotFoundException(`An error occurred finding user ${externalId}`));
+        if (!user) return next(new NotFoundException(`An error occurred finding user ${externalId}`));
+
+        if(!user.birthday || !user.disabilities || !user.restaurantDietTags)
+            return next(new InternalException(`User with id ${externalId} has invalid properties`));
 
         try {
             // This value means 1 / (365 * 24 * 60 * 60 * 1000)
