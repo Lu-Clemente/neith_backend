@@ -36,32 +36,19 @@ class TravelPlanAIservice extends AIService {
             description: "",
             type: "object",
             properties: {
-                days: {
+                places: {
                     type: "array",
                     items: {
                         type: "object",
                         properties: {
-                            schedule: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        time: { type: "string" },
-                                        activity: { type: "string" },
-                                        location: { type: "string" }
-                                    }
-                                }
-                            },
-                            restaurants: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        activity: { type: "string" },
-                                        name: { type: "string" }
-                                    }
-                                }
-                            }
+                            day: { type: "number" },
+                            time: { type: "number" },
+                            activity: { type: "string" },
+                            originalName: { type: "string" },
+                            translatedName: { type: "string" },
+                            isRestaurant: { type: "boolean" },
+                            latitude: { type: "number" },
+                            longitude: { type: "number" }
                         }
                     }
                 },

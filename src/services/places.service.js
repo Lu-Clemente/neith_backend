@@ -68,6 +68,11 @@ class PlacesService {
         return result;
     }
 
+    async searchOne(text = "") {
+        const result = await this.searchPaginated(0, 1, text);
+        return result.length < 1 ? null : result[0];
+    }
+
     updatePlace(id, data) {
         data.updatedAt = new Date().toISOString();
         return getFirestore(this.databaseName)

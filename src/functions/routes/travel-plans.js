@@ -115,7 +115,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
 
         if (!user) return next(new NotFoundException(`An error occurred finding user ${externalId}`));
 
-        if(!user.birthday || !user.disabilities || !user.restaurantDietTags)
+        if (!user.birthday || !user.disabilities || !user.restaurantDietTags)
             return next(new InternalException(`User with id ${externalId} has invalid properties`));
 
         try {
@@ -150,104 +150,62 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         }
 
         try {
-            // const restaurantOp = [];
-            // const locationOp = [];
+            const dbPlaces = await Promise.all(travelPlan.plan.places.map((place) => placesService.searchOne(place.originalName)));
 
-            // const searchPlaces = (list, nameKey) => {
-            //     const operations = [];
+            const tagQuestionOperations = dbPlaces.reduce((list, place) => {
+                if (place && !list.includes(place.types[0])) {
+                    list.push(place.types[0]);
+                }
 
-            //     for (let index = 0; index < list.length; index++) {
-            //         const name = list[index][nameKey];
-            //         operations.push(placesService.searchPaginated(0, 1, name.toLowerCase()));
-            //     }
+                return list;
+            }, ["tourist_attraction", "restaurant"]).map((tag) => questionService.findQuestions("tag", tag));
+            const foodQuestionOperations = ["wine", "beer", "breakfast"].map((tag) => questionService.findQuestions("food", tag));
+            const [placeQuestions, foodQuestions] = await Promise.all([tagQuestionOperations, foodQuestionOperations]);
 
-            //     return operations;
-            // }
+            for (let index = 0; index < travelPlan.plan.places.length; index++) {
+                const place = travelPlan.plan.places[index];
+                const dbPlace = dbPlaces[index];
+                place.questions = [];
+                if (place.isRestaurant) place.questions = place.questions.concat(placeQuestions[1].questions);
+                else place.questions = place.questions.concat(placeQuestions[0].questions);
 
-            // for (let index = 0; index < travelPlan.plan.days.length; index++) {
-            //     const day = travelPlan.plan.days[index];
-            //     const { restaurants, schedule } = day;
+                if (!dbPlace) continue;
 
-            //     restaurantOp.push(...searchPlaces(restaurants, "name"));
-            //     locationOp.push(...searchPlaces(schedule, "location"));
-            // }
+                if (place.isRestaurant) {
+                    if (dbPlace.servesWine) place.questions = place.questions.concat(foodQuestions[0].questions);
+                    if (dbPlace.servesBeer) place.questions = place.questions.concat(foodQuestions[1].questions);
+                    if (dbPlace.servesBreakfast) place.questions = place.questions.concat(foodQuestions[2].questions);
+                }
 
-            // const [
-            //     restaurantResults,
-            //     locationResults,
-            //     locationDefaultQuestions,
-            //     restaurantDefaultQuestions
-            // ] = await Promise.all([
-            //     Promise.all(locationOp),
-            //     Promise.all(restaurantOp),
-            //     questionService.findQuestions("tag", "tourist_attraction"),
-            //     questionService.findQuestions("tag", "restaurant"),
-            // ]);
-            // logger.debug(locationResults, restaurantResults);
-            // const locationQuestions = await Promise.all(locationResults.map((location) => {
-            //     if (location.length === 0 || location[0].types.length === 0)
-            //         return locationDefaultQuestions;
+                const tag = dbPlace.types[0];
+                const tagQuestions = placeQuestions.find((question) => question.subtype === tag);
 
-            //     return questionService.findQuestions("tag", location[0].types[0]);
-            // }));
-            // const restaurantQuestions = await Promise.all(restaurantResults.map((restaurant) => {
-            //     if (restaurant.length === 0)
-            //         return restaurantDefaultQuestions;
+                if (!tagQuestions) continue;
 
-            //     return new Promise((resolve, reject) => {
-            //         const ops = [restaurantDefaultQuestions];
-            //         const place = restaurant[0];
-            //         if (place.servesWine) ops.push(questionService.findQuestions("food", "wine"));
-            //         if (place.servesBeer) ops.push(questionService.findQuestions("food", "beer"));
-            //         if (place.servesBreakfast) ops.push(questionService.findQuestions("food", "breakfast"));
+                place.questions = place.questions.concat(tagQuestions.questions);
+            }
 
-            //         Promise.all(ops).then((result) => resolve(result.flat(1))).catch((error) => reject(error));
-            //     });
-            // }));
-            // logger.debug(locationQuestions, restaurantQuestions);
+            travelPlan.plan = {
+                tips: travelPlan.plan.tips,
+                days: travelPlan.plan.places.reduce((list, place, index) => {
+                    const lastIndex = list.length;
+                    if (place.day > lastIndex) list.push({ schedule: [], restaurants: [] });
 
-            // for (let index = 0; index < locationQuestions.length; index++) {
-            //     const questions = locationQuestions[index];
+                    const mountedPlace = {
+                        name: place.originalName,
+                        translatedName: place.translatedName,
+                        time: place.time,
+                        latitude: place.latitude,
+                        longitude: place.longitude,
+                        reference: dbPlaces[index],
+                        questions: place.questions
+                    };
+                    if (place.isRestaurant) list[place.day - 1].restaurants.push(mountedPlace);
+                    else list[place.day - 1].schedule.push(mountedPlace);
 
-            //     let operations = 0;
-            //     for (let i = 0; i < travelPlan.plan.days.length; i++) {
-            //         const day = travelPlan.plan.days[i];
-            //         if (operations + day.schedule.length < index) {
-            //             operations += day.schedule.length;
-            //             continue;
-            //         }
-            //         for (let j = 0; j < day.schedule.length; j++) {
-            //             const scheduleIndex = index - operations;
-            //             if (scheduleIndex != j) continue;
-
-            //             travelPlan.plan.days[i].schedule[j].questions = questions;
-            //             break;
-            //         }
-            //         break;
-            //     }
-            // }
-
-            // for (let index = 0; index < restaurantQuestions.length; index++) {
-            //     const questions = restaurantQuestions[index];
-
-            //     let operations = 0;
-            //     for (let i = 0; i < travelPlan.plan.days.length; i++) {
-            //         const day = travelPlan.plan.days[i];
-            //         if (operations + day.restaurants.length < index) {
-            //             operations += day.restaurants.length;
-            //             continue;
-            //         }
-            //         for (let j = 0; j < day.restaurants.length; j++) {
-            //             const restaurantIndex = index - operations;
-            //             if (restaurantIndex != j) continue;
-
-            //             travelPlan.plan.days[i].restaurants[j].questions = questions;
-            //             break;
-            //         }
-            //         break;
-            //     }
-            // }
-            // logger.debug(travelPlan.plan);
+                    return list;
+                }, [])
+            };
 
             await travelPlansService.update(planId, travelPlan);
         } catch (error) {
