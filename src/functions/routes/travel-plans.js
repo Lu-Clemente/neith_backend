@@ -14,6 +14,25 @@ const { QuestionsService } = require("../../services/questions.service");
 const { logger } = require("firebase-functions");
 /* eslint-enable no-unused-vars */
 
+function convertPreferredTimeToText(prefferedTime) {
+    let min = 24;
+    let max = 0;
+    if (prefferedTime.includes("morning")) {
+        min = 7;
+        max = max > 11 ? max : 11;
+    }
+    if(prefferedTime.includes("afternoon")) {
+        min = min < 12 ? min : 12;
+        max = max > 17 ? max : 17;
+    }
+    if(prefferedTime.includes("night")) {
+        min = min < 18 ? min : 18;
+        max = 23;
+    }
+
+    return `${min} ${min > 11 ? "PM" : "AM"} to ${max} ${max > 11 ? "PM" : "AM"}`;
+}
+
 /**
  * @param {Express.Application} app 
  * @param {TravelPlansService} travelPlansService
@@ -123,8 +142,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const age = Math.round((new Date() - user.birthday.toDate()) * 3.1709791983764586e-11);
             const tripDays = travelPlan.travelDuration;
             const attractions = travelPlan.tourismTypes.join(", ");
-            const preferredTime = (Array.isArray(travelPlan.preferredTime) ? travelPlan.preferredTime[0] : travelPlan.preferredTime);
-            const schedule = preferredTime === "morning" ? "7AM to 11AM" : preferredTime === "afternoon" ? "12PM to 5PM" : "6PM to 11PM";
+            const schedule = convertPreferredTimeToText(travelPlan.preferredTime);
 
             const disabilities = user.disabilities.join(", ");
             const dietRestrictions = user.restaurantDietTags.join(", ");
