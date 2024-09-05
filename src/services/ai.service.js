@@ -41,16 +41,17 @@ class TravelPlanAIservice extends AIService {
                     items: {
                         type: "object",
                         properties: {
-                            day: { type: "number" },
-                            time: { type: "number" },
-                            activity: { type: "string" },
-                            originalName: { type: "string" },
+                            day: { type: "number", nullable: false, minimum: 1 },
+                            time: { type: "number", nullable: false, minimum: 0, maximum: 23 },
+                            activity: { type: "string", default: "An activity to participate" },
+                            originalName: { type: "string", nullable: false },
                             translatedName: { type: "string" },
-                            isRestaurant: { type: "boolean" },
+                            placeType: { type: "EPlaceType", format: "enum", enum: ["RESTAURANT", "HOTEL", "OTHER"], nullable: false },
                             latitude: { type: "number" },
                             longitude: { type: "number" }
                         }
-                    }
+                    }, 
+                    nullable: false
                 },
                 tips: {
                     type: "array",

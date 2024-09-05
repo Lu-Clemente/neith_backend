@@ -160,6 +160,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const considerations = hasDisabilities || hasDietRestrictions ? ` Please consider that i have ${disabilitiesText}${hasAndInText}${dietText}.` : "";
 
             const prompt = `I'm ${age} years old and planning a ${tripDays}-day and ${numberText} trip to Rome. I have interest in: ${attractions} and culinary experiences. My schedule is from ${schedule}. Could you please create a travel plan and tourist attractions, and restaurants with suggested times for every visit. Consider that i will arrive at ${arrivalTime} on day 1 and departure at ${departureTime} on last day;${considerations} Respond with a json string`;
+            logger.debug(travelPlan.prompt);
             const plan = await aiService.generateResponse(prompt);
 
             travelPlan.plan = plan;
@@ -188,13 +189,16 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                 const place = travelPlan.plan.places[index];
                 const dbPlace = dbPlaces[index];
 
+                if (place.placeType === "HOTEL") continue;
+
                 place.questions = [];
-                if (place.isRestaurant) place.questions = place.questions.concat(placeQuestions[1].questions);
+                const isRestaurant = place.placeType === "RESTAURANT";
+                if (isRestaurant) place.questions = place.questions.concat(placeQuestions[1].questions);
                 else place.questions = place.questions.concat(placeQuestions[0].questions);
 
                 if (!dbPlace) continue;
 
-                if (place.isRestaurant) {
+                if (isRestaurant) {
                     if (dbPlace.servesWine) place.questions = place.questions.concat(foodQuestions[0].questions);
                     if (dbPlace.servesBeer) place.questions = place.questions.concat(foodQuestions[1].questions);
                     if (dbPlace.servesBreakfast) place.questions = place.questions.concat(foodQuestions[2].questions);
