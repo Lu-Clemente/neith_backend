@@ -16,6 +16,7 @@ const { PlacesService } = require("../services/places.service");
 const { Auth } = require("../middlewares/auth.middleware");
 const { StorageService } = require("../services/storage.service");
 const { QuestionsService } = require("../services/questions.service");
+const { DestinationsService } = require("../services/destination.service");
 
 const app = require("express")();
 
@@ -27,12 +28,23 @@ const userService = new UsersService(config.get("database.db_name"));
 const travelPlansService = new TravelPlansService(config.get("database.db_name"));
 const placesService = new PlacesService(config.get("database.db_name"));
 const questionService = new QuestionsService(config.get("database.db_name"));
+const destinationService = new DestinationsService(config.get("database.db_name"));
 const travelPlanAIService = new TravelPlanAIservice(config.get("cloud.firebase"));
 const storageService = new StorageService(config.get("cloud.storage_bucket"));
 const authMiddleware = new Auth();
 
 configureUserRoutes(app, userService, authMiddleware);
-configureTravelPlansRoutes(app, travelPlansService, travelPlanAIService, userService, placesService, storageService, questionService, authMiddleware);
+configureTravelPlansRoutes(
+    app,
+    travelPlansService,
+    travelPlanAIService,
+    userService,
+    placesService,
+    storageService,
+    questionService,
+    destinationService,
+    authMiddleware
+);
 
 const tagService = new TagService();
 app.get("/v1/tags/", async (_, res, next) => {

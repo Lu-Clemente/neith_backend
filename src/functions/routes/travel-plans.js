@@ -12,6 +12,7 @@ const { PlacesService } = require("../../services/places.service");
 const { StorageService } = require("../../services/storage.service");
 const { QuestionsService } = require("../../services/questions.service");
 const { logger } = require("firebase-functions");
+const { DestinationsService } = require("../../services/destination.service");
 /* eslint-enable no-unused-vars */
 
 function formatHour(hour) {
@@ -48,9 +49,10 @@ function convertPreferredTimeToText(prefferedTime) {
  * @param {PlacesService} placesService 
  * @param {StorageService} storageService 
  * @param {QuestionsService} questionService 
+ * @param {DestinationsService} destinationService
  * @param {Auth} authMiddleware 
  */
-function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, questionService, authMiddleware) {
+function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, questionService, destinationService, authMiddleware) {
     app.get("/v1/travel-plans/", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async (req, res, next) => {
         const { externalId } = req.state.user;
 
@@ -98,7 +100,32 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
         return res.json(places);
     });
 
-    app.post("/v1/travel-plans/", validateInput(schemas.postTravelPlan), authMiddleware.authenticate(), async (req, res, next) => {
+    app.get("/v1/destinations", validateInput(schemas.getDestinations), authMiddleware.authenticate(), async (req, res, next) => {
+        const { offset, limit, text } = req.state.input.query;
+
+        let destinations = [];
+        try {
+            destinations = await destinationService.searchPaginated(offset, limit, text);
+
+            const photos = await Promise.all(
+                destinations.map((destionation) => Promise.all([
+                    destionation.photoPath ? storageService.getDownloadURL(destionation.photoPath) : Promise.resolve(""),
+                    destionation.thumbPath ? storageService.getDownloadURL(destionation.thumbPath) : Promise.resolve(""),
+                ])));
+
+            destinations = destinations.map((destionation, index) => {
+                destionation.photoUrl = photos[index][0];
+                destionation.thumbUrl = photos[index][1];
+                return destionation;
+            });
+        } catch (error) {
+            return next(new InternalException("An error occurred finding destionations", error));
+        }
+
+        return res.json(destinations);
+    });
+
+    app.post("/v1/travel-plans", validateInput(schemas.postTravelPlan), authMiddleware.authenticate(), async (req, res, next) => {
         const { externalId } = req.state.user;
 
         let user = null;
