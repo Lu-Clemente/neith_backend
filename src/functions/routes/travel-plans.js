@@ -14,6 +14,7 @@ const { PlaceService } = require("../../services/place.service");
 const { StorageService } = require("../../services/storage.service");
 const { QuestionService } = require("../../services/question.service");
 const { DestinationService } = require("../../services/destination.service");
+const { EventService } = require("../../services/event.service");
 /* eslint-enable no-unused-vars */
 
 function formatHour(hour) {
@@ -44,6 +45,7 @@ function convertPreferredTimeToText(prefferedTime) {
 
 /**
  * @param {Express.Application} app 
+ * @param {Auth} authMiddleware 
  * @param {TravelPlanService} travelPlansService
  * @param {TravelPlanAIservice} aiService 
  * @param {UserService} userService 
@@ -51,9 +53,20 @@ function convertPreferredTimeToText(prefferedTime) {
  * @param {StorageService} storageService 
  * @param {QuestionService} questionService 
  * @param {DestinationService} destinationService
- * @param {Auth} authMiddleware 
+ * @param {EventService} eventService 
  */
-function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, questionService, destinationService, authMiddleware) {
+function configureTravelPlansRoutes(
+    app,
+    authMiddleware,
+    travelPlansService,
+    aiService,
+    userService,
+    placesService,
+    storageService,
+    questionService,
+    destinationService,
+    eventService
+) {
     app.get("/v1/travel-plans/", validateInput(schemas.getTravelPlans), authMiddleware.authenticate(), async (req, res, next) => {
         const { externalId } = req.state.user;
 
@@ -94,6 +107,8 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                 place.thumbUrl = photos[index][1];
                 return place;
             });
+
+            await eventService.create({action: "listPlaces", searchText: text, userId: req.state.user.externalId});
         } catch (error) {
             return next(new InternalException("An error occurred finding places", error));
         }
@@ -119,6 +134,8 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                 destionation.thumbUrl = photos[index][1];
                 return destionation;
             });
+
+            await eventService.create({action: "listDestinations", searchText: text, userId: req.state.user.externalId});
         } catch (error) {
             return next(new InternalException("An error occurred finding destionations", error));
         }
