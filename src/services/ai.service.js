@@ -5,7 +5,7 @@ class AIService {
     constructor(firebaseConfig) {
         const firebaseApp = initializeApp(firebaseConfig);
         const vertexAI = getVertexAI(firebaseApp);
-        this.model = getGenerativeModel(vertexAI, { model: "gemini-1.5-pro", generationConfig: { responseMimeType: "application/json" } });
+        this.model = getGenerativeModel(vertexAI, { model: "gemini-1.5-flash", generationConfig: { responseMimeType: "application/json" } });
     }
 
     async generateResponse(prompt) {

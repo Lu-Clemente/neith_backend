@@ -6,5 +6,5 @@ const { initializeApp } = require("firebase-admin/app");
 initializeApp();
 
 module.exports = {
-    api: functions.https.onRequest(app),
+    api: functions.runWith({ timeoutSeconds: 300 }).https.onRequest(app),
 };

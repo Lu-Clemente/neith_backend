@@ -21,11 +21,11 @@ function convertPreferredTimeToText(prefferedTime) {
         min = 7;
         max = max > 11 ? max : 11;
     }
-    if(prefferedTime.includes("afternoon")) {
+    if (prefferedTime.includes("afternoon")) {
         min = min < 12 ? min : 12;
         max = max > 17 ? max : 17;
     }
-    if(prefferedTime.includes("night")) {
+    if (prefferedTime.includes("night")) {
         min = min < 18 ? min : 18;
         max = 23;
     }
@@ -163,12 +163,15 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const plan = await aiService.generateResponse(prompt);
 
             travelPlan.plan = plan;
+            travelPlan.prompt = prompt;
         } catch (error) {
             return next(new InternalException(`An error occurred generating travel plan for user ${user.id}`, error));
         }
 
         try {
-            const dbPlaces = await Promise.all(travelPlan.plan.places.map((place) => placesService.searchOne(place.originalName)));
+            const dbPlaces = await Promise.all(travelPlan.plan.places.map(
+                (place) => placesService.searchOne(place.originalName.split(" ")[0].toLowerCase())
+            ));
 
             const tagQuestionOperations = dbPlaces.reduce((list, place) => {
                 if (place && !list.includes(place.types[0])) {
@@ -178,11 +181,13 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                 return list;
             }, ["tourist_attraction", "restaurant"]).map((tag) => questionService.findQuestions("tag", tag));
             const foodQuestionOperations = ["wine", "beer", "breakfast"].map((tag) => questionService.findQuestions("food", tag));
-            const [placeQuestions, foodQuestions] = await Promise.all([tagQuestionOperations, foodQuestionOperations]);
+
+            const [[placeQuestions], [foodQuestions]] = await Promise.all([Promise.all(tagQuestionOperations), Promise.all(foodQuestionOperations)]);
 
             for (let index = 0; index < travelPlan.plan.places.length; index++) {
                 const place = travelPlan.plan.places[index];
                 const dbPlace = dbPlaces[index];
+
                 place.questions = [];
                 if (place.isRestaurant) place.questions = place.questions.concat(placeQuestions[1].questions);
                 else place.questions = place.questions.concat(placeQuestions[0].questions);
@@ -215,7 +220,7 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
                         time: place.time,
                         latitude: place.latitude,
                         longitude: place.longitude,
-                        reference: dbPlaces[index],
+                        reference: dbPlaces[index] || {},
                         questions: place.questions
                     };
                     if (place.isRestaurant) list[place.day - 1].restaurants.push(mountedPlace);
