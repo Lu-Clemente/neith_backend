@@ -4,7 +4,7 @@ const { v4: uuidV4 } = require("uuid");
 // eslint-disable-next-line no-unused-vars
 const { TravelPlan } = require("../models/travelPlan");
 
-class TravelPlansService {
+class TravelPlanService {
     constructor(databaseName) {
         this.databaseName = databaseName;
         this.collectionName = "travelPlans";
@@ -68,5 +68,5 @@ class TravelPlansService {
 }
 
 module.exports = {
-    TravelPlansService
+    TravelPlanService
 };

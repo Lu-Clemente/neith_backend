@@ -4,15 +4,16 @@ const { validateInput } = require("../../middlewares/input-validation");
 const { NotFoundException, InternalException } = require("../../models/errors");
 
 /* eslint-disable no-unused-vars */
-const { TravelPlansService } = require("../../services/travel-plans.service");
-const { TravelPlanAIservice } = require("../../services/ai.service");
-const { UsersService } = require("../../services/users.service");
-const { Auth } = require("../../middlewares/auth.middleware");
-const { PlacesService } = require("../../services/places.service");
-const { StorageService } = require("../../services/storage.service");
-const { QuestionsService } = require("../../services/questions.service");
 const { logger } = require("firebase-functions");
-const { DestinationsService } = require("../../services/destination.service");
+const { Auth } = require("../../middlewares/auth.middleware");
+
+const { TravelPlanService } = require("../../services/travel-plan.service");
+const { TravelPlanAIservice } = require("../../services/ai.service");
+const { UserService } = require("../../services/user.service");
+const { PlaceService } = require("../../services/place.service");
+const { StorageService } = require("../../services/storage.service");
+const { QuestionService } = require("../../services/question.service");
+const { DestinationService } = require("../../services/destination.service");
 /* eslint-enable no-unused-vars */
 
 function formatHour(hour) {
@@ -43,13 +44,13 @@ function convertPreferredTimeToText(prefferedTime) {
 
 /**
  * @param {Express.Application} app 
- * @param {TravelPlansService} travelPlansService
+ * @param {TravelPlanService} travelPlansService
  * @param {TravelPlanAIservice} aiService 
- * @param {UsersService} userService 
- * @param {PlacesService} placesService 
+ * @param {UserService} userService 
+ * @param {PlaceService} placesService 
  * @param {StorageService} storageService 
- * @param {QuestionsService} questionService 
- * @param {DestinationsService} destinationService
+ * @param {QuestionService} questionService 
+ * @param {DestinationService} destinationService
  * @param {Auth} authMiddleware 
  */
 function configureTravelPlansRoutes(app, travelPlansService, aiService, userService, placesService, storageService, questionService, destinationService, authMiddleware) {

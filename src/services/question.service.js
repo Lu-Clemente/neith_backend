@@ -1,6 +1,6 @@
 const { getFirestore } = require("firebase-admin/firestore");
 
-class QuestionsService {
+class QuestionService {
     constructor(databaseName) {
         this.databaseName = databaseName;
     }
@@ -39,5 +39,5 @@ class QuestionsService {
 }
 
 module.exports = {
-    QuestionsService
+    QuestionService
 };

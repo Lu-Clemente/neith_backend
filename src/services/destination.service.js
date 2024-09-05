@@ -3,7 +3,7 @@ const { getFirestore } = require("firebase-admin/firestore");
 // eslint-disable-next-line no-unused-vars
 const { Destination } = require("../models/destination");
 
-class DestinationsService {
+class DestinationService {
     constructor(databaseName) {
         this.databaseName = databaseName;
         this.collectionName = "destinations";
@@ -84,5 +84,5 @@ class DestinationsService {
 }
 
 module.exports = {
-    DestinationsService
+    DestinationService
 };

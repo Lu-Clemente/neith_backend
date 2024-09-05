@@ -6,14 +6,14 @@ const { InternalException, NotFoundException } = require("../../models/errors");
 const { putChangeValue, arrayEquals } = require("../../utils/update-functions");
 
 /* eslint-disable no-unused-vars */
-const { UsersService } = require("../../services/users.service");
+const { UserService } = require("../../services/user.service");
 const { Auth } = require("../../middlewares/auth.middleware");
 /* eslint-enable no-unused-vars */
 
 /**
  * 
  * @param {Express.Application} app 
- * @param {UsersService} userService 
+ * @param {UserService} userService 
  * @param {Auth} authMiddleware 
  */
 function configureUserRoutes(app, userService, authMiddleware) {
