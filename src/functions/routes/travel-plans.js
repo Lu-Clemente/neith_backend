@@ -14,6 +14,13 @@ const { QuestionsService } = require("../../services/questions.service");
 const { logger } = require("firebase-functions");
 /* eslint-enable no-unused-vars */
 
+function formatHour(hour) {
+    if (hour > 12) return `${hour - 12} PM`;
+    if (hour === 12) return "12 PM";
+
+    return `${hour} AM`;
+}
+
 function convertPreferredTimeToText(prefferedTime) {
     let min = 24;
     let max = 0;
@@ -30,7 +37,7 @@ function convertPreferredTimeToText(prefferedTime) {
         max = 23;
     }
 
-    return `${min} ${min > 11 ? "PM" : "AM"} to ${max} ${max > 11 ? "PM" : "AM"}`;
+    return `${formatHour(min)} to ${formatHour(max)}`;
 }
 
 /**
@@ -159,11 +166,12 @@ function configureTravelPlansRoutes(app, travelPlansService, aiService, userServ
             const hasAndInText = !hasDietRestrictions || !hasDisabilities ? "" : " and ";
             const considerations = hasDisabilities || hasDietRestrictions ? ` Please consider that i have ${disabilitiesText}${hasAndInText}${dietText}.` : "";
 
-            const prompt = `I'm ${age} years old and planning a ${tripDays}-day and ${numberText} trip to Rome. I have interest in: ${attractions} and culinary experiences. My schedule is from ${schedule}. Could you please create a travel plan and tourist attractions, and restaurants with suggested times for every visit. Consider that i will arrive at ${arrivalTime} on day 1 and departure at ${departureTime} on last day;${considerations} Respond with a json string`;
-            logger.debug(travelPlan.prompt);
+            const prompt = `I'm ${age} years old and planning a ${tripDays}-day trip with ${numberText} to Rome. I am interested in: ${attractions} and culinary experiences. My schedule is from ${schedule}. Could you please create a travel plan with tourist attractions and restaurants with suggested times for every visit. Consider that i will arrive at ${formatHour(arrivalTime)} on day 1 and departure will be at ${formatHour(departureTime)} on last day;${considerations}`;
+            logger.debug(`Created prompt: ${prompt}`);
             const plan = await aiService.generateResponse(prompt);
 
             travelPlan.plan = plan;
+            logger.debug(`Generated plan: ${JSON.stringify(plan)}`);
             travelPlan.prompt = prompt;
         } catch (error) {
             return next(new InternalException(`An error occurred generating travel plan for user ${user.id}`, error));
