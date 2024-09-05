@@ -63,6 +63,16 @@
             ],
             "program": "${workspaceFolder}/src/bots/places-scraper.js",
             "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch get travel plan",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/bots/get-travel-plan.js",
+            "envFile": "${workspaceFolder}/.env"
         }
     ]
 }
